@@ -170,6 +170,7 @@ class GerenciadorLetras:
 
         self.sequencia_de_letras = []
         self.proximo_indice_letra = 0
+        self.col_invalida = False
         self.gerar_seuquencia_de_letras()
 
         self.gerar_nova_letra()
@@ -313,7 +314,8 @@ class GerenciadorLetras:
                 if palavra and posicao:
                     self.gp.liberar_posicao_apos_letra(
                         self.atual.char, palavra, posicao)
-
+                elif col != self.atual.pos_origem:
+                    self.col_invalida = True
                 break
 
         self.atual = None
@@ -416,7 +418,7 @@ class GerenciadorLetras:
                 rect.center
             )
 
-#--------------------------- Menu ---------------------------
+# --------------------------- Menu ---------------------------
 
 # class TelaMenu:
 
@@ -436,14 +438,13 @@ class WordDropGame:
 
         self.gerenciador_palavras = GerenciadorPalavras(palavras)
 
-        #tela de jogo
-        self.tela_menu = TelaMenu() 
+        # tela de jogo
+        self.tela_menu = TelaMenu()
         self.tela_game_over = TelaGameOver()
         self.tela_vitoria = TelaVitoria()
         self.tela_atual = "MENU"  # "JOGO", "GAME_OVER", "VITORIA"
         self.botao_play_rect = None
         self.botao_exit_rect = None
-
 
         # Área de jogo
         self.x_area_jogo = 380
@@ -555,7 +556,7 @@ class WordDropGame:
         self.gerenciador_letras.desenhar(self.tela)
 
     def verificar_derrota(self):
-        return any(self.gerenciador_letras.grid[0])
+        return any(self.gerenciador_letras.grid[0]) or self.gerenciador_letras.col_invalida
 
     def verificar_vitoria(self):
         return all(self.gerenciador_palavras.completadas.values())
@@ -580,8 +581,8 @@ class WordDropGame:
     def run(self):
         running = True
         palavras_jogo = ['bravo', 'clima', 'festa', 'hotel',
-                      'fluir', 'poder', 'quero', 'tango',
-                      'renda', 'zebra', 'grupo', 'lucro']
+                         'fluir', 'poder', 'quero', 'tango',
+                         'renda', 'zebra', 'grupo', 'lucro']
         while running:
             tempo_atual = pygame.time.get_ticks()
 
@@ -596,17 +597,18 @@ class WordDropGame:
                  # Se está no JOGO, processa controles
                 if self.tela_atual == "MENU":
                     if self.botao_play_rect and self.botao_exit_rect:
-                        resultado = self.tela_menu.processar_eventos(event, self.botao_play_rect, self.botao_exit_rect)
+                        resultado = self.tela_menu.processar_eventos(
+                            event, self.botao_play_rect, self.botao_exit_rect)
                         if resultado == "PLAY":
                             print("Iniciando jogo...")
                             self.iniciar_jogo(palavras_jogo)
                         elif resultado == "EXIT":
                             running = False
-                 
+
                 elif self.tela_atual == "JOGO":
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
-                            self.tela_atual = "MENU"  # Volta ao menu com ESC  
+                            self.tela_atual = "MENU"  # Volta ao menu com ESC
                         elif event.key == pygame.K_LEFT and not self.gerenciador_letras.pausado:
                             self.gerenciador_letras.mover_letra_esquerda()
                         elif event.key == pygame.K_RIGHT and not self.gerenciador_letras.pausado:
@@ -624,15 +626,16 @@ class WordDropGame:
                 elif self.tela_atual in ["GAME_OVER", "VITORIA"] and self.botao_rect:
                     resultado = None
                     if self.tela_atual == "GAME_OVER":
-                        resultado = self.tela_game_over.processar_eventos(event, self.botao_rect)
+                        resultado = self.tela_game_over.processar_eventos(
+                            event, self.botao_rect)
 
                     elif self.tela_atual == "VITORIA":
-                        resultado = self.tela_vitoria.processar_eventos(event, self.botao_rect)
+                        resultado = self.tela_vitoria.processar_eventos(
+                            event, self.botao_rect)
 
                     if resultado == "MENU":
                         self.tela_atual = "MENU"  # Ou volta para o menu
                         # self.iniciar_jogo(novas_palavras)
-
 
             # Atualiza lógica do jogo apenas se estiver jogando
             if self.tela_atual == "JOGO" and self.gerenciador_letras:
@@ -648,17 +651,17 @@ class WordDropGame:
                 elif self.verificar_vitoria():
                     self.tela_atual = "VITORIA"
 
-            
             # Desenha a tela apropriada
             if self.tela_atual == "MENU":
-                self.botao_play_rect, self.botao_exit_rect = self.tela_menu.desenhar(self.tela)
+                self.botao_play_rect, self.botao_exit_rect = self.tela_menu.desenhar(
+                    self.tela)
             elif self.tela_atual == "JOGO":
                 self.desenhar_interface()
             elif self.tela_atual == "GAME_OVER":
                 self.botao_rect = self.tela_game_over.desenhar(self.tela)
             elif self.tela_atual == "VITORIA":
                 self.botao_rect = self.tela_vitoria.desenhar(self.tela)
-                
+
             pygame.display.flip()
             self.relogio.tick(FPS)
 
